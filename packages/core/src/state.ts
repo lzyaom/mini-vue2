@@ -1,5 +1,24 @@
 import { Component } from '#type/component'
+import { defineReactive, del, Dep, observe, set, Watcher } from '@vue/observe'
+import { hasOwn, invokeErrorWithHandling, isPlainObject } from '@vue/shared'
+
 export function stateMixin(Vue: Component) {
+  Vue.prototype.$set = set
+  Vue.prototype.$delete = del
+
+  //创建 watcher，
+  Vue.prototype.$watch = function (
+    expOrFn: string | Function,
+    cb: Function,
+    options?: Record<string, any>
+  ) {
+    options = options || {}
+    options.user = true
+    const watcher = new Watcher(this, expOrFn, cb, options)
+    if (options.immediate) {
+      invokeErrorWithHandling(cb, this, [watcher.value], this, '')
+    }
+  }
 }
 
 export function initState(vm: Component) {
@@ -83,8 +102,32 @@ function initData(vm: Component) {
  * @param computed 用户自定义计算属性对象
  */
 function initComputed(vm: Component, computed: Object) {
+  const watchers = (vm._computedWatchers = Object.create(null))
+  for (const key in computed) {
+    if (hasOwn(computed, key)) {
+      const compute = computed[key]
+
+      // 函数或者对象形式
+      const getter = typeof compute === 'function' ? compute : compute.get
+
+      // 每个计算属性都会创建一个 watcher，便于收集依赖
+      // lazy: true 表示 计算属性是延迟执行的
+      //
+      watchers[key] = new Watcher(vm, getter, () => {}, { lazy: true })
+
+      if (!(key in vm)) {
+        defineComputed(vm, key, compute)
+      }
+    }
+  }
 }
 
+const sharedPropertyDef = {
+  get: () => {},
+  set: () => {},
+  configurable: true,
+  enumerable: true,
+}
 
 /**
  * 将 计算属性 绑定到 vm 上
@@ -93,8 +136,32 @@ function initComputed(vm: Component, computed: Object) {
  * @param compute 处理函数或对象
  */
 function defineComputed(vm, key, compute) {
+  if (typeof compute === 'function') {
+    sharedPropertyDef.get = createComputedGetter(key)
+    sharedPropertyDef.set = () => {}
+  } else {
+    sharedPropertyDef.get = compute.get
+    sharedPropertyDef.set = compute.set || (() => {})
+  }
+  // 将计算属性定义到组件实例上
+  Object.defineProperty(vm, key, sharedPropertyDef)
 }
 
+function createComputedGetter(key) {
+  return function computedGetter() {
+    const watcher = this._computedWatchers && this._computedWatchers[key]
+
+    if (watcher.dirty) {
+      // 求值后 dirty 变为 false，当依赖属性更新时修改为 true
+      watcher.evaluate() // 取值时，依赖属性的 dep 会将这个 watcher 记住
+    }
+    // 计算属性的 watcher 出栈后，也要收集 上一层的 watcher
+    if (Dep.target) {
+      watcher.depend()
+    }
+    return watcher.value
+  }
+}
 /**
  * 初始化用户自定义的 watch
  *
@@ -106,4 +173,46 @@ function defineComputed(vm, key, compute) {
  * @param watch 用户自定义的 watch
  */
 function initWatch(vm: Component, watch: Object) {
+  for (const key in watch) {
+    if (hasOwn(watch, key)) {
+      const handler = watch[key]
+      // key: [handler1, handler2]
+      if (Array.isArray(handler)) {
+        for (let i = 0; i < handler.length; i++) {
+          createWatcher(vm, key, handler[i])
+        }
+      } else {
+        // key: string | object | function
+        createWatcher(vm, key, handler)
+      }
+    }
+  }
+}
+
+/**
+ * 创建 watcher，实质是调用 $watch 方法去
+ * @param vm
+ * @param expOrFn
+ * @param handler
+ * @param options
+ * @returns
+ */
+function createWatcher(
+  vm: Component,
+  expOrFn: string | Function,
+  handler: any,
+  options?: Object
+) {
+  // key: { handler: fn, ...}
+  if (isPlainObject(handler)) {
+    options = handler
+    handler = handler.handler
+  }
+  // key: 'method'（在 methods 中定义的方法）
+  if (typeof handler === 'string') {
+    handler = vm[handler]
+  }
+
+  // 本质还是调用 $watch
+  return vm.$watch(expOrFn, handler, options)
 }
