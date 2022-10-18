@@ -69,5 +69,5 @@ export function query(el: string | Element): Element {
  * @returns
  */
 export function toString(val: any) {
-  return JSON.stringify(val)
+  return val == null ? '' : JSON.stringify(val)
 }
