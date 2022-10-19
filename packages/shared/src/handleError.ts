@@ -1,4 +1,4 @@
-import { isPromise } from 'util/types'
+import { isPromise } from './index'
 
 export function invokeErrorWithHandling(
   handle: Function,

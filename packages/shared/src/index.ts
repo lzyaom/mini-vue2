@@ -80,3 +80,16 @@ export function toString(val: any) {
 export function isDef<T>(v: T) {
   return v !== undefined && v !== null
 }
+
+/**
+ * 判断是否为 Promise
+ * @param val any
+ * @returns Boolean
+ */
+export function isPromise(val: any): boolean {
+  return (
+    isDef(val) &&
+    typeof val.then === 'function' &&
+    typeof val.catch === 'function'
+  )
+}
