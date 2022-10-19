@@ -61,7 +61,7 @@ function genProp(attrs: Array<ASTAttr>): string {
       attr.value = attr.value.split(listDelimiter).reduce((prev, item) => {
         if (item) {
           const [key, value] = item.split(propertyDelimiter)
-          prev[key] = value
+          prev[key] = value.trim()
         }
         return prev
       }, {})

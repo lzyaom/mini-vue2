@@ -2,12 +2,15 @@ import type { Component } from '#type/component'
 import { nextTick, query, toString } from '@vue/shared'
 import { compileToFunction } from '@vue/compiler'
 import { mountComponent } from './lifecycle'
-import { createElement } from '@vue/vdom'
+import { createElementVNode } from '@vue/vdom'
 import { createTextVNode } from '@vue/vdom'
 
 export function renderMixin(Vue: Component) {
   Vue.prototype._v = createTextVNode
   Vue.prototype._s = toString
+  /**
+   * 挂载元素到 dom 上
+   */
   Vue.prototype.$mount = function (el: string | Element) {
     el = query(el)
     const opts = this.$options
@@ -55,5 +58,5 @@ export function renderMixin(Vue: Component) {
 }
 
 export function initRender(vm: Component) {
-  vm._c = (tag, data) => createElement(tag, data)
+  vm._c = (tag, data, children) => createElementVNode(tag, data, children, vm)
 }

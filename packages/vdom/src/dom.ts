@@ -1,1 +1,6 @@
-export function createElement(tag: string, data: any) {}
+export function createElement(
+  vnode,
+  insertVnodeQueue,
+  parentElm?: any,
+  refELm?: any
+) {}

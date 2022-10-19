@@ -71,3 +71,12 @@ export function query(el: string | Element): Element {
 export function toString(val: any) {
   return val == null ? '' : JSON.stringify(val)
 }
+
+/**
+ * 判断是否定义，非 undefined/null
+ * @param v
+ * @returns
+ */
+export function isDef<T>(v: T) {
+  return v !== undefined && v !== null
+}
