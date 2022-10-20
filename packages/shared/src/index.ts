@@ -64,12 +64,16 @@ export function query(el: string | Element): Element {
 }
 
 /**
- *
+ * 转化为字符
  * @param val
  * @returns
  */
 export function toString(val: any) {
-  return val == null ? '' : JSON.stringify(val)
+  return val == null
+    ? ''
+    : Array.isArray(val) || isPlainObject(val)
+    ? JSON.stringify(val, null, 2)
+    : String(val)
 }
 
 /**
