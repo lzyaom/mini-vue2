@@ -1,4 +1,3 @@
-import { isDef } from '@vue/shared'
 import { VNode } from './vnode'
 
 /**
@@ -48,14 +47,39 @@ export function removeChild(node: Node, child: Node) {
   node.removeChild(child)
 }
 
+/**
+ * 获取下一个相邻节点
+ * @param node
+ * @returns
+ */
 export function nextSibling(node: Node) {
   return node.nextSibling
 }
 
+/**
+ * 获取父节点
+ * @param node
+ * @returns
+ */
 export function parentNode(node: Node) {
   return node.parentNode
 }
 
+/**
+ * 获取节点名称
+ * @param node
+ * @returns
+ */
 export function tagName(node: Element): string {
   return node.tagName
+}
+
+/**
+ * 设置属性
+ * @param el
+ * @param key
+ * @param value
+ */
+export function setAttribute(el: Element, key: string, value: string) {
+  el.setAttribute(key, value)
 }

@@ -6,6 +6,8 @@ import {
   insertBefore,
   nextSibling,
   parentNode,
+  removeChild,
+  setAttribute,
   tagName,
 } from './dom'
 import { VNode } from './vnode'
@@ -17,6 +19,10 @@ function createElm(vnode, insertVnodeQueue, parentElm?: any, refELm?: any) {
     vnode.elm = createElement(tag, vnode)
     // 创建子元素
     createChildren(vnode, vnode.children, insertVnodeQueue)
+    // 处理属性
+    if (isDef(vnode.data)) {
+      createProps(vnode)
+    }
     // 插入元素
     insert(parentElm, vnode.elm, refELm)
   } else {
@@ -27,10 +33,26 @@ function createElm(vnode, insertVnodeQueue, parentElm?: any, refELm?: any) {
   }
 }
 
+function createProps(vnode) {
+  const data = vnode.data
+  const elm = vnode.elm
+  const attrs = data.attrs
+
+  for (const key in attrs) {
+    if (key === 'style') {
+      for (const name in attrs.style) {
+        elm.style[name] = attrs.style[name]
+      }
+    } else {
+      setAttribute(elm, key, attrs[key])
+    }
+  }
+}
+
 function createChildren(vnode, children, insertVnodeQueue) {
   if (Array.isArray(children)) {
     for (let i = 0; i < children.length; i++) {
-      createElm(children[i], insertVnodeQueue, vnode.elm)
+      createElm(children[i], insertVnodeQueue, vnode.elm, null)
     }
   } else {
     const text = createText(vnode.text)
@@ -61,7 +83,11 @@ export function patch(preVnode, vnode) {
     )
     // 是真实元素，则根据 vnode 创建元素
     const parentElm = parentNode(preVnode.elm)
-    createElm(vnode, insertVnodeQueue, parentElm, nextSibling(parentElm!))
+    createElm(vnode, insertVnodeQueue, parentElm, nextSibling(preVnode.elm))
+    // 移除原来的元素
+    if (isDef(parentElm)) {
+      removeChild(parentElm!, preVnode.elm)
+    }
   } else {
     // 是虚拟节点，则 diff
   }
