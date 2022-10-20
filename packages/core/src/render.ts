@@ -8,6 +8,10 @@ import { createTextVNode } from '@vue/vdom'
 export function renderMixin(Vue: Component) {
   Vue.prototype._v = createTextVNode
   Vue.prototype._s = toString
+  Vue.prototype._c = function (tag, data, children) {
+    return createElementVNode(tag, data, children, this)
+  }
+
   /**
    * 挂载元素到 dom 上
    */
@@ -57,6 +61,4 @@ export function renderMixin(Vue: Component) {
   }
 }
 
-export function initRender(vm: Component) {
-  vm._c = (tag, data, children) => createElementVNode(tag, data, children, vm)
-}
+export function initRender(vm: Component) {}
