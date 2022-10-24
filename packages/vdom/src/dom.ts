@@ -83,3 +83,7 @@ export function tagName(node: Element): string {
 export function setAttribute(el: Element, key: string, value: string) {
   el.setAttribute(key, value)
 }
+
+export function setContent(el: Element, text: string) {
+  el.textContent = text
+}

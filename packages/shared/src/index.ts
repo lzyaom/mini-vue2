@@ -86,6 +86,15 @@ export function isDef<T>(v: T) {
 }
 
 /**
+ * 判断是否为未定义
+ * @param v
+ * @returns
+ */
+export function isUnDef(v: any): v is undefined | null {
+  return v === undefined || v === null
+}
+
+/**
  * 判断是否为 Promise
  * @param val any
  * @returns Boolean

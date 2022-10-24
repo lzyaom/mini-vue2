@@ -1,4 +1,4 @@
-import { isDef } from '@vue/shared'
+import { isDef, isUnDef } from '@vue/shared'
 import {
   appendChild,
   createElement,
@@ -8,6 +8,7 @@ import {
   parentNode,
   removeChild,
   setAttribute,
+  setContent,
   tagName,
 } from './dom'
 import { VNode } from './vnode'
@@ -33,6 +34,10 @@ function createElm(vnode, insertVnodeQueue, parentElm?: any, refELm?: any) {
   }
 }
 
+/**
+ *
+ * @param vnode
+ */
 function createProps(vnode) {
   const data = vnode.data
   const elm = vnode.elm
@@ -49,6 +54,12 @@ function createProps(vnode) {
   }
 }
 
+/**
+ *
+ * @param vnode
+ * @param children
+ * @param insertVnodeQueue
+ */
 function createChildren(vnode, children, insertVnodeQueue) {
   if (Array.isArray(children)) {
     for (let i = 0; i < children.length; i++) {
@@ -60,6 +71,12 @@ function createChildren(vnode, children, insertVnodeQueue) {
   }
 }
 
+/**
+ *
+ * @param parent
+ * @param elm
+ * @param ref
+ */
 function insert(parent, elm, ref) {
   if (isDef(parent)) {
     if (isDef(ref) && parentNode(ref) === parent) {
@@ -69,11 +86,151 @@ function insert(parent, elm, ref) {
     }
   }
 }
+/**
+ * 判断是否为相同节点
+ * @param preVnode
+ * @param vnode
+ * @returns boolean
+ */
+function sameNode(preVnode, vnode) {
+  return (
+    preVnode.tag === vnode.tag &&
+    preVnode.key === vnode.key &&
+    isDef(preVnode.data) === isDef(vnode.data)
+  )
+}
+/**
+ * 新增节点
+ * @param parentElm
+ * @param refELm
+ * @param vnodes
+ * @param startIdx
+ * @param endIdx
+ */
+function addVNodes(
+  parentElm,
+  refELm,
+  vnodes,
+  startIdx,
+  endIdx,
+  insertVnodeQueue
+) {
+  for (; startIdx < endIdx; startIdx++) {
+    createElm(vnodes[startIdx], insertVnodeQueue, parentElm, refELm)
+  }
+}
+/**
+ * 移除节点
+ * @param vnodes
+ * @param startIdx
+ * @param endIdx
+ */
+function removeVNodes(vnodes, startIdx, endIdx) {}
+/**
+ * 更新子节点（diff 算法重点）
+ * @param parentElm
+ * @param oldCh
+ * @param newch
+ */
+function patchChildren(parentElm, oldCh, newCh, insertVnodeQueue) {
+  let oldStartIdx = 0
+  let oldEndIdx = oldCh.length - 1
+  let oldStartVnode = oldCh[0]
+  let oldEndVnode = oldCh[oldEndIdx]
+  let newStartIdx = 0
+  let newEndIdx = newCh.length - 1
+  let newStartVnode = newCh[0]
+  let newEndVnode = newCh[newEndIdx]
+  let oldKeyToIdx, idxInOld, vnodeToMove, refElm
+
+  while (newStartIdx <= newEndIdx && oldStartIdx <= oldEndIdx) {
+    if (isUnDef(oldStartVnode)) {
+      oldStartVnode = oldCh[++oldStartIdx]
+    } else if (isUnDef(oldEndVnode)) {
+      oldEndVnode = oldCh[--oldEndIdx]
+    } else if (sameNode(oldStartVnode, newStartVnode)) {
+      // 头头
+      patchVnode(oldStartVnode, newStartVnode, insertVnodeQueue)
+      oldStartVnode = oldCh[++oldStartIdx]
+      newStartVnode = newCh[++newStartIdx]
+    } else if (sameNode(oldEndVnode, newEndVnode)) {
+      // 尾尾
+      patchVnode(oldEndVnode, newEndVnode, insertVnodeQueue)
+      oldEndVnode = oldCh[--oldEndIdx]
+      newEndVnode = newCh[--newEndIdx]
+    } else if (sameNode(oldStartVnode, newEndVnode)) {
+      // 头尾
+      patchVnode(oldStartVnode, newEndVnode, insertVnodeQueue)
+      insertBefore(parentElm, oldStartVnode.elm, nextSibling(oldEndVnode.elm)!)
+      oldStartVnode = oldCh[++oldStartIdx]
+      newEndVnode = newCh[--newEndIdx]
+    } else if (sameNode(oldEndVnode, newStartVnode)) {
+      // 尾头
+      patchVnode(oldEndVnode, newStartVnode, insertVnodeQueue)
+      insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
+      oldEndVnode = oldCh[--oldEndIdx]
+      newStartVnode = newCh[++newStartIdx]
+    } else {
+      // 中间
+    }
+  }
+}
+/**
+ * 修改更新的节点
+ * @param preVnode
+ * @param vnode
+ */
+function patchVnode(preVnode, vnode, insertVnodeQueue) {
+  console.log(preVnode, vnode)
+  if (preVnode === vnode) {
+    console.log('vnode 没有变')
+    return
+  }
+  const elm = (vnode.elm = preVnode.elm)
+  const oldCh = preVnode.children
+  const ch = vnode.children
+  // 1. vnode.text 不存在
+  if (isUnDef(vnode.text)) {
+    // 1.1 preVnode.children 存在 vnode.children 存在
+    if (isDef(oldCh) && isDef(ch)) {
+      // 新旧虚拟节点对象不相同时
+      if (oldCh !== ch) {
+        console.log('patch children')
+        patchChildren(elm, oldCh, ch, insertVnodeQueue)
+      }
+    } else if (isDef(ch)) {
+      // 1.2 preVnode.children 不存在 vnode.children 存在
+      // 如果旧虚拟节点是文字节点
+      if (isDef(preVnode.text)) {
+        setContent(elm, '')
+      }
+      console.log('新增节点')
+      // 新增节点
+      addVNodes(elm, null, ch, 0, ch.length - 1, insertVnodeQueue)
+    } else if (isDef(oldCh)) {
+      // 1.3 preVnode.children 存在 vnode.children 不存在
+      // 移除节点
+      console.log('移除节点')
+      removeVNodes(oldCh, 0, oldCh.length - 1)
+    } else if (isDef(preVnode.text)) {
+      // 1.4 preVnode.children 不存在 vnode.children 不存在
+      console.log('元素内容修改为空字符')
+      setContent(elm, '')
+    }
+  } else if (preVnode.text !== vnode.text) {
+    // 2 vnode.text 存在 且和 preVnode.text(不管有没有 children) 不相同时
+    console.log('修改元素文本为新节点文本内容')
+    setContent(elm, vnode.text)
+  }
+}
 
 export function patch(preVnode, vnode) {
   const isRealEl = isDef(preVnode.nodeType)
   const insertVnodeQueue: any[] = []
-  if (isRealEl) {
+  if (!isRealEl && sameNode(preVnode, vnode)) {
+    // 是虚拟节点，则 diff
+    patchVnode(preVnode, vnode, insertVnodeQueue)
+  } else {
     preVnode = new VNode(
       tagName(preVnode).toLowerCase(),
       {},
@@ -88,7 +245,6 @@ export function patch(preVnode, vnode) {
     if (isDef(parentElm)) {
       removeChild(parentElm!, preVnode.elm)
     }
-  } else {
-    // 是虚拟节点，则 diff
   }
+  return vnode.elm
 }

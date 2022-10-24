@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mini-vue2</title>
+</head>
+<body>
+  <div id="app">
+    <div class="aaa">{{aa}}111{{aa}}2222</div>
+    <div class="b" style="color: red;">akkkkkk</div>
+    <div class="cc">{{userName}}</div>
+    <div>{{name}} 2022</div>
+  </div>
+  <script src="../dist/vue.js"></script>
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        name: 'lan',
+        aa: [1,2,3,4]
+      },
+      computed: {
+        userName (t) {
+          return this.name
+        }
+      },
+      watch: {
+        name (val, old) {
+          console.log("new: ", val, 'old: ', old)
+        }
+      }
+    })
+    setTimeout(() => {
+      vm.name = 'lzy'
+    }, 1000);
+    // console.log(vm, vm.userName)
+  </script>
+</body>
+</html>
