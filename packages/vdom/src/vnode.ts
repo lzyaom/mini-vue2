@@ -1,6 +1,6 @@
 import type { Component } from '#type/component'
 // import type { VNodeData } from '#type/vnode'
-
+let key = 0
 export class VNode {
   tag?: string
   data: VNodeData | undefined
@@ -24,6 +24,7 @@ export class VNode {
     this.text = text
     this.elm = elm
     this.context = context
+    this.key = key++
   }
 }
 /**
@@ -50,4 +51,18 @@ export function createElementVNode(
  */
 export function createTextVNode(val: string | number) {
   return new VNode(undefined, undefined, undefined, String(val))
+}
+/**
+ * 克隆节点
+ * @param vnode
+ * @returns
+ */
+export function cloneVNode(vnode) {
+  return new VNode(
+    vnode.tag,
+    vnode.data,
+    vnode.children,
+    vnode.text,
+    vnode.context
+  )
 }

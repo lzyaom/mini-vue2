@@ -11,7 +11,7 @@ import {
   setContent,
   tagName,
 } from './dom'
-import { VNode } from './vnode'
+import { cloneVNode, VNode } from './vnode'
 
 function createElm(vnode, insertVnodeQueue, parentElm?: any, refELm?: any) {
   const tag = vnode.tag
@@ -126,6 +126,22 @@ function addVNodes(
  * @param endIdx
  */
 function removeVNodes(vnodes, startIdx, endIdx) {}
+
+/**
+ * 创建 Map<key, index>
+ * @param vnodes
+ * @param startIdx
+ * @param endIdx
+ * @returns
+ */
+function createKeyToIdxMap(vnodes, startIdx, endIdx) {
+  const keyToidxMap = {}
+  for (; startIdx <= endIdx; startIdx++) {
+    keyToidxMap[vnodes[startIdx].key] = startIdx
+  }
+  return keyToidxMap
+}
+
 /**
  * 更新子节点（diff 算法重点）
  * @param parentElm
@@ -172,7 +188,56 @@ function patchChildren(parentElm, oldCh, newCh, insertVnodeQueue) {
       newStartVnode = newCh[++newStartIdx]
     } else {
       // 中间
+      if (isUnDef(oldKeyToIdx)) {
+        oldKeyToIdx = createKeyToIdxMap(oldCh, oldStartIdx, oldEndIdx)
+      }
+
+      idxInOld = oldKeyToIdx[newStartVnode.key]
+
+      if (isUnDef(idxInOld)) {
+        createElm(newStartVnode, insertVnodeQueue, parentElm, oldStartVnode.elm)
+      } else {
+        vnodeToMove = oldCh[idxInOld]
+        if (sameNode(vnodeToMove, newStartVnode)) {
+          // 相同节点，需要更新子节点和属性
+          patchVnode(vnodeToMove, newStartVnode, insertVnodeQueue)
+          oldCh[idxInOld] = undefined
+          insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm) // 移动到旧头节点之前
+        } else {
+          // 不同节点，需要将新节点移到旧头节点之前
+          createElm(newStartVnode, insertVnodeQueue, parentElm, vnodeToMove.elm)
+        }
+        newStartVnode = newCh[++newStartIdx]
+      }
     }
+  }
+
+  if (oldStartIdx < oldEndIdx) {
+    // 旧虚拟列表的子节点多于新虚拟列表的子节点个数，移除
+    removeVNodes(oldCh, oldStartIdx, oldEndIdx)
+  } else if (newStartIdx < newEndIdx) {
+    // 新虚拟列表的子节点多于旧虚拟列表的子节点个数，新增
+    /**
+     * eg:
+     * ref: null:
+     *  1. abc
+     *     abc(def)
+     *
+     * ref: newEndIdx + 1 元素之前
+     *  1. abc
+     *     (def)abc
+     *  2. abc
+     *     a(def)bc
+     */
+    refElm = isUnDef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
+    addVNodes(
+      parentElm,
+      refElm,
+      newCh,
+      newStartIdx,
+      newEndIdx,
+      insertVnodeQueue
+    )
   }
 }
 /**
@@ -231,13 +296,16 @@ export function patch(preVnode, vnode) {
     // 是虚拟节点，则 diff
     patchVnode(preVnode, vnode, insertVnodeQueue)
   } else {
-    preVnode = new VNode(
-      tagName(preVnode).toLowerCase(),
-      {},
-      [],
-      undefined,
-      preVnode
-    )
+    if (isRealEl) {
+      // 只有 preVnode 为真实元素时，才给它创建虚拟节点
+      preVnode = new VNode(
+        tagName(preVnode).toLowerCase(),
+        {},
+        [],
+        undefined,
+        preVnode
+      )
+    }
     // 是真实元素，则根据 vnode 创建元素
     const parentElm = parentNode(preVnode.elm)
     createElm(vnode, insertVnodeQueue, parentElm, nextSibling(preVnode.elm))
