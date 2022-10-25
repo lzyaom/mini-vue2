@@ -12,7 +12,13 @@ import {
   tagName,
 } from './dom'
 import { cloneVNode, VNode } from './vnode'
-
+/**
+ * 创建元素
+ * @param vnode
+ * @param insertVnodeQueue
+ * @param parentElm
+ * @param refELm
+ */
 function createElm(vnode, insertVnodeQueue, parentElm?: any, refELm?: any) {
   const tag = vnode.tag
   // 标签存在
@@ -35,7 +41,7 @@ function createElm(vnode, insertVnodeQueue, parentElm?: any, refELm?: any) {
 }
 
 /**
- *
+ * 创建属性
  * @param vnode
  */
 function createProps(vnode) {
@@ -55,7 +61,7 @@ function createProps(vnode) {
 }
 
 /**
- *
+ * 创建子元素
  * @param vnode
  * @param children
  * @param insertVnodeQueue
@@ -72,7 +78,7 @@ function createChildren(vnode, children, insertVnodeQueue) {
 }
 
 /**
- *
+ *  插入元素
  * @param parent
  * @param elm
  * @param ref
@@ -125,7 +131,21 @@ function addVNodes(
  * @param startIdx
  * @param endIdx
  */
-function removeVNodes(vnodes, startIdx, endIdx) {}
+function removeVNodes(parentElm, vnodes, startIdx, endIdx) {
+  for (; startIdx < endIdx; startIdx++) {
+    const ch = vnodes[startIdx]
+    if (isDef(ch)) {
+      if (isDef(ch.tag)) {
+        // 标签节点
+        // 需要结合销毁 hook 并移除元素，这里先简化，只做移除元素操作
+        removeChild(parentElm, ch.elm)
+      } else {
+        // 文本节点
+        removeChild(parentElm, ch.elm)
+      }
+    }
+  }
+}
 
 /**
  * 创建 Map<key, index>
@@ -214,7 +234,7 @@ function patchChildren(parentElm, oldCh, newCh, insertVnodeQueue) {
 
   if (oldStartIdx < oldEndIdx) {
     // 旧虚拟列表的子节点多于新虚拟列表的子节点个数，移除
-    removeVNodes(oldCh, oldStartIdx, oldEndIdx)
+    removeVNodes(parentElm, oldCh, oldStartIdx, oldEndIdx)
   } else if (newStartIdx < newEndIdx) {
     // 新虚拟列表的子节点多于旧虚拟列表的子节点个数，新增
     /**
@@ -276,7 +296,7 @@ function patchVnode(preVnode, vnode, insertVnodeQueue) {
       // 1.3 preVnode.children 存在 vnode.children 不存在
       // 移除节点
       console.log('移除节点')
-      removeVNodes(oldCh, 0, oldCh.length - 1)
+      removeVNodes(elm, oldCh, 0, oldCh.length - 1)
     } else if (isDef(preVnode.text)) {
       // 1.4 preVnode.children 不存在 vnode.children 不存在
       console.log('元素内容修改为空字符')
@@ -289,6 +309,12 @@ function patchVnode(preVnode, vnode, insertVnodeQueue) {
   }
 }
 
+/**
+ * 更新新旧虚拟节点
+ * @param preVnode
+ * @param vnode
+ * @returns
+ */
 export function patch(preVnode, vnode) {
   const isRealEl = isDef(preVnode.nodeType)
   const insertVnodeQueue: any[] = []
