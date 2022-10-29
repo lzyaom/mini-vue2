@@ -1,4 +1,11 @@
-import { eventMixin, initMixin, lifecycleMixin, stateMixin, renderMixin} from "@vue/core"
+import {
+  eventMixin,
+  initMixin,
+  lifecycleMixin,
+  stateMixin,
+  renderMixin,
+} from '@vue/core'
+import { iniGlobalApi } from '@vue/globalApi'
 
 // 使用构造函数是为了扩展方式，将不同的方法放到不同的位置
 function Vue(options) {
@@ -16,4 +23,6 @@ stateMixin(Vue)
 //@ts-expect-error
 renderMixin(Vue)
 
-export default (Vue as unknown) as GlobalAPI
+iniGlobalApi(Vue)
+
+export default Vue as unknown as GlobalAPI
