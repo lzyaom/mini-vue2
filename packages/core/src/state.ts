@@ -85,7 +85,7 @@ function proxy(target: Object, sourceKey: string, key: string) {
  */
 function initData(vm: Component) {
   let data = vm.$options.data
-  vm._data = data = typeof data === 'function' ? data.call(vm) : data || {}
+  vm._data = data = typeof data === 'function' ? data.call(vm, vm) : data || {}
   const keys = Object.keys(data)
   const len = keys.length
   for (let i = 0; i < len; i++) {

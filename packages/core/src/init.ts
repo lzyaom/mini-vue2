@@ -3,6 +3,7 @@ import { initLifecycle } from './lifecycle'
 import { initState } from './state'
 import { initRender } from './render'
 import { initEvents } from './event'
+import { mergeOptions } from '@vue/shared'
 
 export function initMixin(Vue: Component) {
   Vue.prototype._init = function init(options?: Record<string, any>) {
@@ -10,7 +11,8 @@ export function initMixin(Vue: Component) {
 
     if (options) {
       // 便于获取传入的选项
-      vm.$options = options
+      // 从全局 options 中的属性 混入到 实例的 options 中
+      vm.$options = mergeOptions(this.constructor.options, options, vm)
     }
     initLifecycle(vm)
     initEvents(vm)

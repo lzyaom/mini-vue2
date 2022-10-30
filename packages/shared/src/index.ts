@@ -1,5 +1,15 @@
 export { nextTick } from './nextTick'
 export { invokeErrorWithHandling } from './handleError'
+export { LIFECYCLE_HOOKS, ASSET_TYPE } from './constants'
+export { extend } from './extend'
+export {
+  mergeOptions,
+  mergeHook,
+  mergeAsset,
+  mergeDataOrFn,
+  mergeOther,
+  mergeWatch,
+} from './merge'
 
 /**
  * 定义属性
