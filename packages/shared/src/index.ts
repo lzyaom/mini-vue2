@@ -4,7 +4,7 @@ export { LIFECYCLE_HOOKS, ASSET_TYPE } from './constants'
 export { extend } from './extend'
 export {
   mergeOptions,
-  mergeHook,
+  mergeLifeCycleHook,
   mergeAsset,
   mergeDataOrFn,
   mergeOther,

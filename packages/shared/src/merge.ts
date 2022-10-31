@@ -1,4 +1,4 @@
-import { Component } from '#type/component'
+import type { Component } from '#type/component'
 import { defaultStrat, strats } from '@vue/globalApi'
 import { set } from '@vue/observe'
 import { extend, hasOwn, isPlainObject } from './index'
@@ -46,7 +46,7 @@ export function mergeOptions(
  * @param child
  * @returns Array<Function> | null
  */
-export function mergeHook(
+export function mergeLifeCycleHook(
   parent: Array<Function> | null,
   child: Array<Function> | Function | null
 ) {

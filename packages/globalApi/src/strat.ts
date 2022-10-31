@@ -3,7 +3,7 @@ import {
   LIFECYCLE_HOOKS,
   mergeAsset,
   mergeDataOrFn,
-  mergeHook,
+  mergeLifeCycleHook,
   mergeOther,
   mergeWatch,
 } from '@vue/shared'
@@ -14,7 +14,7 @@ type Strat = { [key: string]: Function }
 export const strats: Strat = {}
 
 LIFECYCLE_HOOKS.forEach((hook) => {
-  strats[hook] = mergeHook
+  strats[hook] = mergeLifeCycleHook
 })
 
 ASSET_TYPE.forEach((type) => {
