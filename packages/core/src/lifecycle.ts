@@ -1,5 +1,6 @@
-import { Component } from '#type/component'
+import type { Component } from '#type/component'
 import { Watcher } from '@vue/observe'
+import { invokeErrorWithHandling } from '@vue/shared'
 import { VNode, patch } from '@vue/vdom'
 
 export function lifecycleMixin(Vue: Component) {
@@ -37,4 +38,18 @@ export function mountComponent(vm: Component, el: Element | null) {
     // 3. 插入到 el 元素中
   }
   new Watcher(vm, update, () => {}, {})
+}
+
+/**
+ * 调用 hook
+ * @param vm 实例
+ * @param hook 生命周期名称
+ */
+export function callHook(vm: Component, hook: string) {
+  const handlers = vm.$options[hook]
+  if (handlers) {
+    for (let i = 0; i < handlers.length; i++) {
+      invokeErrorWithHandling(handlers[i], vm, null, vm, `${hook} hook invoke`)
+    }
+  }
 }

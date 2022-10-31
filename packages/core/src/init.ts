@@ -1,5 +1,5 @@
 import type { Component } from '#type/component'
-import { initLifecycle } from './lifecycle'
+import { callHook, initLifecycle } from './lifecycle'
 import { initState } from './state'
 import { initRender } from './render'
 import { initEvents } from './event'
@@ -17,9 +17,11 @@ export function initMixin(Vue: Component) {
     initLifecycle(vm)
     initEvents(vm)
     initRender(vm)
+    callHook(vm, 'beforeCreate')
     // 初始化状态 props methods data computed watch
     initState(vm)
 
+    callHook(vm, 'created')
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
