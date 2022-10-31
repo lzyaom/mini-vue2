@@ -116,3 +116,12 @@ export function isPromise(val: any): boolean {
     typeof val.catch === 'function'
   )
 }
+
+/**
+ * 判断是否为函数
+ * @param value
+ * @returns
+ */
+export function isFunction(value: any): value is (...args: any[]) => any {
+  return typeof value === 'function'
+}
