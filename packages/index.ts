@@ -1,3 +1,4 @@
+import { GlobalAPI } from '#type/global-api'
 import {
   eventMixin,
   initMixin,

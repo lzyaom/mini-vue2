@@ -1,6 +1,17 @@
+import { GlobalAPI } from './global-api'
+
 export declare class Component {
   constructor(options?: any)
 
+  static cid: number
+  static options: Record<string, any>
+  static super: typeof Component
+  static extend: GlobalAPI['extend']
+  static mixin: GlobalAPI['mixin']
+  static use: GlobalAPI['use']
+  static directive: GlobalAPI['directive']
+  static component: GlobalAPI['component']
+  static filter: GlobalAPI['filter']
   // 公共属性
   $el: any //
   $data: Record<string, any> //
@@ -20,7 +31,11 @@ export declare class Component {
     target: Record<string, any> | Array<T>,
     key: string | number
   ) => void // 删除对象或数组中的属性时，响应式更新对象或数组
-  $watch: (expOrFn: string | Function, handler: Function, options?: Object) => Function
+  $watch: (
+    expOrFn: string | Function,
+    handler: Function,
+    options?: Object
+  ) => Function
   $on: (event: string, fn: Function) => Component
   $once: (event: string, fn: Function) => Component
   $off: (event: string, fn: Function) => Component
@@ -30,12 +45,12 @@ export declare class Component {
     tag: string | Component,
     data?: Record<string, any>,
     children?: []
-  ) => void;
+  ) => void
 
   // 生命周期
   _init: Function
   _mount: (el: Element | Component) => Component
-  _update: (vnode: object) => void
-  
+  _update: (vnode: object) => void;
+
   [key: string]: any
 }
