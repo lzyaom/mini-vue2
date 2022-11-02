@@ -22,13 +22,31 @@ export function mergeOptions(
   child: Record<string, any>,
   vm?: Component
 ) {
+  if (typeof child === 'function') {
+    // 子组件 Sub
+    // @ts-expect-error
+    child = child.options
+  }
+
+  if (!child._base) {
+    // 仅合并有 _base 属性的 options，
+    if (child.extends) {
+      parent = mergeOptions(parent, child.extends, vm)
+    }
+    if (child.mixins) {
+      for (let i = 0; i < child.mixins.length; i++) {
+        parent = mergeOptions(parent, child.mixins[i], vm)
+      }
+    }
+  }
   const options = {}
+  let key
   //
-  for (const key in parent) {
+  for (key in parent) {
     mergeField(key)
   }
 
-  for (const key in child) {
+  for (key in child) {
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
@@ -122,6 +140,7 @@ function mergeData(to: Record<string, any>, from: Record<string, any> | null) {
 export function mergeDataOrFn(parent: any, child: any, vm?: Component) {
   if (!vm) {
     // Vue.mixin 混入时，没有 vm，所以是混入到全局 options
+    // 子组件 合并 options 时
     if (!child) {
       return parent
     }
@@ -138,6 +157,7 @@ export function mergeDataOrFn(parent: any, child: any, vm?: Component) {
   } else {
     // 在实例中混入时，混入到实例的 options 上
     // 作为 data 函数调用
+    // 非子组件
     return function mergeInstanceDataFn() {
       const instanceData =
         typeof child === 'function' ? child.call(vm, vm) : child

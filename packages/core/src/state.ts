@@ -69,13 +69,13 @@ function initMethods(vm: Component, methods: Object) {
  * @param sourceKey 原来的位置
  * @param key 属性名
  */
-function proxy(target: Object, sourceKey: string, key: string) {
+export function proxy(target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, {
     get() {
-      return target[sourceKey][key]
+      return this[sourceKey][key]
     },
     set(newValue) {
-      target[sourceKey][key] = newValue
+      this[sourceKey][key] = newValue
     },
   })
 }
@@ -135,7 +135,7 @@ const sharedPropertyDef = {
  * @param key 计算属性 key
  * @param compute 处理函数或对象
  */
-function defineComputed(vm, key, compute) {
+export function defineComputed(vm, key, compute) {
   if (typeof compute === 'function') {
     sharedPropertyDef.get = createComputedGetter(key)
     sharedPropertyDef.set = () => {}
